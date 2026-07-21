@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Hydration Scan</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #0f172a;
+            color: #f8fafc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .card {
+            background: #1e293b;
+            border-radius: 16px;
+            padding: 24px;
+            max-width: 450px;
+            width: 100%;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            margin-bottom: 8px;
+            color: #38bdf8;
+        }
+
+        p.subtitle {
+            font-size: 0.9rem;
+            color: #94a3b8;
+            margin-bottom: 20px;
+        }
+
+        .camera-container {
+            position: relative;
+            width: 100%;
+            height: 250px;
+            background: #0f172a;
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 2px stroke #334155;
+            margin-bottom: 20px;
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .scan-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: #38bdf8;
+            box-shadow: 0 0 15px #38bdf8;
+            display: none;
+            animation: scan 2s infinite ease-in-out;
+        }
+
+        @keyframes scan {
+            0% { top: 0%; }
+            50% { top: 95%; }
+            100% { top: 0%; }
+        }
+
+        .btn {
+            background: #0284c7;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 1rem;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.2s;
+        }
+
+        .btn:hover {
+            background: #0369a1;
+        }
+
+        .results {
+            margin-top: 20px;
+            display: none;
+            background: #334155;
+            padding: 16px;
+            border-radius: 8px;
+            text-align: left;
+        }
+
+        .stat {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .reminder-box {
+            margin-top: 15px;
+            padding: 12px;
+            background: #0284c7;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h1>Analyseur d'Hydratation IA</h1>
+    <p class="subtitle">Scanne ton visage pour vérifier ton niveau d'eau actuel</p>
+
+    <div class="camera-container">
+        <video id="webcam" autoplay playsinline></video>
+        <div class="scan-overlay" id="scanner"></div>
+    </div>
+
+    <button class="btn" id="scanBtn" onclick="startScan()">Lancer le Scan IA</button>
+
+    <div class="results" id="resultsBlock">
+        <div class="stat">
+            <span>Niveau d'hydratation :</span>
+            <span id="scoreText" style="color: #38bdf8;">--%</span>
+        </div>
+        <div class="stat">
+            <span>État de la peau :</span>
+            <span id="statusText">--</span>
+        </div>
+
+        <div class="reminder-box" id="reminderText">
+            Prochain rappel d'eau programmé dans 1 heure.
+        </div>
+    </div>
+</div>
+
+<script>
+    const video = document.getElementById('webcam');
+    const scanner = document.getElementById('scanner');
+    const scanBtn = document.getElementById('scanBtn');
+    const resultsBlock = document.getElementById('resultsBlock');
+
+    // Activer la caméra
+    async function initCamera() {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            video.srcObject = stream;
+        } catch (err) {
+            alert("Impossible d'accéder à la caméra. Vérifie les autorisations.");
+        }
+    }
+
+    // Lancer le scan
+    function startScan() {
+        scanBtn.disabled = true;
+        scanBtn.innerText = "Analyse en cours...";
+        scanner.style.display = "block";
+
+        setTimeout(() => {
+            scanner.style.display = "none";
+            scanBtn.innerText = "Refaire un scan";
+            scanBtn.disabled = false;
+            
+            // Simulation de résultats IA
+            const score = Math.floor(Math.random() * (85 - 45 + 1)) + 45;
+            document.getElementById('scoreText').innerText = score + "%";
+            
+            if (score < 60) {
+                document.getElementById('statusText').innerText = "Besoin urgent d'eau";
+                document.getElementById('statusText').style.color = "#ef4444";
+            } else {
+                document.getElementById('statusText').innerText = "Hydratation correcte";
+                document.getElementById('statusText').style.color = "#22c55e";
+            }
+
+            resultsBlock.style.display = "block";
+            setupNotification();
+        }, 3000);
+    }
+
+    // Système de rappel de boisson
+    function setupNotification() {
+        if ("Notification" in window) {
+            Notification.requestPermission().then(permission => {
+                if (permission === "granted") {
+                    // Rappel simulé après 1 heure (3600000 ms)
+                    setTimeout(() => {
+                        new Notification("Hydratation IA", {
+                            body: "C'est l'heure de boire un grand verre d'eau !",
+                            icon: "https://cdn-icons-png.flaticon.com/512/3105/3105807.png"
+                        });
+                    }, 3600000);
+                }
+            });
+        }
+    }
+
+    initCamera();
+</script>
+
+</body>
+</html>
